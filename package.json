@@ -1,0 +1,18 @@
+{
+  "name": "@future-wd/contact-form-xhr",
+  "version": "2.0.5",
+  "description": "Sends all form fields via XHR and prints server response message",
+  "scripts": {
+    "release": "standard-version",
+    "git push tags": "git push --follow-tags origin master"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "standard-version": "^9.3.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "github.com/future-wd/hugo-contact-form-xhr"
+  }
+}
