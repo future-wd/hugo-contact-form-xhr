@@ -2,12 +2,12 @@
 /** @module hugo-contact-form-xhr */
 /**
  * default function
- * @param {string} formId - ID of form to collect inputs from
+ * @param {string} formId - ID of form to collect inputs from (defaults to first form on page)
  * @param {string} formAction - URL to post form to
  * @param {String} account - account for endpoint, appended to form data as field
- * @param {integer} formTimeout - Time to wait before timeout (milliseconds)
+ * @param {integer} formTimeout - Time to wait before timeout (milliseconds) defaults to 8000
  * @param {string} grecaptchaKey - Google recaptcha public/site key
- * @param {string} grecaptchaLocation - Recaptcha location (bottomright, bottomleft, or inline)
+ * @param {string} grecaptchaLocation - Recaptcha location (bottomright (Default), bottomleft, or inline)
  * @param {string} alertClass - CSS class used to display an alert box
  * @param {string} successClass - CSS modifier class for success alert
  * @param {string} errorClass - CSS class used to modify alert into a error alert
@@ -16,9 +16,8 @@
  * @param {string} spinnerId - ID of spinner div
  */
 
-export default (
-  formId,
-  {
+export default ({
+    formId = '',
     formAction = '',
     grecaptchaKey = '',
     account = '',
