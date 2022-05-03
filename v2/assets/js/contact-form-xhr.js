@@ -147,14 +147,16 @@ export default ({
       }
     }
     const xhr = new XMLHttpRequest();
+    xhr.open('POST', action);
+    xhr.send(data);
     xhr.timeout = formTimeout;
     // xhr.responseType = 'json';
     // text type used so that is response isnt json, its passed through as text (for php and server error debugging)
-    xhr.responseType = 'text';
-    xhr.onload = () => {
+    // xhr.responseType = 'text'; // default
+    xhr.onloadend = () => {
       if (xhr.status === 200) {
         // check for JSON, returns true if JSON
-        function parseJSON(text) {
+        function checkJSON(text) {
           try {
             var o = JSON.parse(text);
             if (o && typeof o === "object") {
@@ -166,18 +168,17 @@ export default ({
             return false;
           }
         }
-        // if JSON, parse and send text to callback, otherwise send text to callback (for server debug messages)
-        if (parseJSON(xhr.responseText)) {
+        // if JSON, parse and send text to callback, 
+        if (checkJSON(xhr.responseText)) {
           callback(JSON.parse(xhr.responseText))
-        } else {
+        } else { // otherwise send text to callback (for server debug messages)
           const data = {
             status: false,
             message: xhr.responseText,
           }
           callback(data);
         }
-        // non 200 status
-      } else {
+      } else {     // non 200 status
         const data = {
           status: false,
           notUserError: true,
@@ -186,24 +187,7 @@ export default ({
         callback(data);
       }
     };
-    xhr.onerror = () => {
-      const data = {
-        status: false,
-        notUserError: true,
-        message: 'An error has occured, please try again later',
-      }
-      callback(data);
-    };
-    xhr.ontimeout = () => {
-      const data = {
-        status: false,
-        notUserError: true,
-        message: 'Error: There is a network connection issue',
-      }
-      callback(data);
-    };
-    xhr.open('POST', action);
-    xhr.send(data);
+
   };
 
   function gReset() {
