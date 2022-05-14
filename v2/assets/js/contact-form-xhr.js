@@ -143,7 +143,7 @@ export default ({
       // Display the key/value pairs
       console.log('form entries:');
       for (var pair of data.entries()) {
-        console.log(pair[0] + ', ' + pair[1]);
+        console.log(pair[0] + ': ' + pair[1]);
       }
     }
     const xhr = new XMLHttpRequest();
