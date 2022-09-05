@@ -26,34 +26,38 @@
  * @param {bool} - debug - true to turn on debug messages
  */
 
-import Dropzone from 'dropzone';
+// import Dropzone from 'dropzone';
 
-const contactForm = ({
-  formId = '',
-  formAction = '',
-  grecaptchaKey = '',
-  account = '',
-  formTimeout = 8000,
-  grecaptchaLocation = 'bottomright', // defaults to bottom right as most contact forms are on the right
-  alertSuccessClass = 'alert alert-success', // BS5
-  alertErrorClass = 'alert alert-danger', // BS5
-  spinnerClass = 'spinner-border', // BS5
-  hiddenClass = 'd-none', // BS5
-  dBlockClass = 'd-block', // BS5
-  dropzone = false,
-  dropzoneFormSelector = '',
-  dropzoneSubmitId = 'js-submit',
-  dropzoneMaxFiles = 6,
-  dropzoneParallelUploads = 6,
-  dropzoneAcceptedFiles = 'image/*',
-  dropzoneResizeWidth = 800,
-  dropzoneTimeout = 8000,
-  // turn on for console.log messages
-  debug = false,
-} = {}) => {
+const contactForm = (
+  {
+    formId = '',
+    formAction = '',
+    grecaptchaKey = '',
+    account = '',
+    formTimeout = 8000,
+    grecaptchaLocation = 'bottomright', // defaults to bottom right as most contact forms are on the right
+    alertSuccessClass = 'alert alert-success', // BS5
+    alertErrorClass = 'alert alert-danger', // BS5
+    spinnerClass = 'spinner-border', // BS5
+    hiddenClass = 'd-none', // BS5
+    dBlockClass = 'd-block', //bs5
+    submitId = 'js-submit',
+    dropzone = false,
+    dropzoneMaxFiles = 6,
+    dropzoneParallelUploads = 6,
+    dropzoneAcceptedFiles = 'image/*',
+    dropzoneResizeWidth = 800,
+    dropzoneTimeout = 8000,
+    // turn on for console.log messages
+    debug = false,
+  } = {},
+  Dropzone = false
+) => {
   if (debug === true) {
     console.log('script loaded');
   }
+
+
   // get form from config, otherwise choose first form on page
   // should the auto id be removed?
   let form;
@@ -69,26 +73,29 @@ const contactForm = ({
   // add div for recaptcha
   const recaptchaDiv = document.createElement('div');
   recaptchaDiv.className = 'g-recaptcha';
+  // is this required?
+  recaptchaDiv.ariaHidden = true;
   form.appendChild(recaptchaDiv);
+
+  // add input for account for endpoint v2
+  const accountInput = document.createElement('input');
+  accountInput.name = 'account';
+  accountInput.value = account;
+  accountInput.ariaHidden = true;
+  accountInput.className = hiddenClass;
+  form.appendChild(accountInput);
 
   // target forms submit button for recapcha v2 and to enable/disable/hide submit button
   // may not be needed in v3
-  let submit;
-  if (dropzone) {
-    submit = document.getElementById(dropzoneSubmitId);
-    if (!submit) {
-      console.error(`${dropzoneSubmitId} is not a valid id of a submit button`);
-    }
-  } else {
-    submit = form.querySelector('button[type="submit"]');
+  const submit = document.getElementById(submitId);
+  if (!submit) {
+    console.error(`${submitId} is not a valid id of a submit button`);
   }
 
   // first input in the form
-  const firstInput = form.elements[0];
+  const firstInput = form.querySelector('input');
 
   // create spinner div, add class, hide
-  const spinnerWrapper = document.createElement('div');
-  // spinnerWrapper.className = 'mt-3'
   const spinner = document.createElement('div');
   spinner.classList.add(spinnerClass, hiddenClass, dBlockClass);
   // spinnerWrapper.appendChild(spinner)
@@ -98,13 +105,13 @@ const contactForm = ({
   status.className = hiddenClass;
   status.setAttribute('role', 'alert');
   // append both to lower form
-  if (dropzone) {
+  // if (dropzone) {
     submit.insertAdjacentElement('afterend', spinner);
     submit.insertAdjacentElement('afterend', status);
-  } else {
-    form.appendChild(spinner);
-    form.appendChild(status);
-  }
+  // } else {
+  //   form.appendChild(spinner);
+  //   form.appendChild(status);
+  // }
 
   // recaptcha script lazy load
   function gLoad(event) {
@@ -129,8 +136,6 @@ const contactForm = ({
 
   //google recaptcha 2 invisible
   /*global grecaptcha */
-  /*eslint no-undef: "error"*/
-  // console.log(`grecaptchaKey is ${grecaptchaKey}`);
   onloadCallback = () => {
     grecaptcha.render(recaptchaDiv, {
       sitekey: grecaptchaKey,
@@ -145,6 +150,11 @@ const contactForm = ({
 
     // clicking submit calls grecaptcha
     submit.addEventListener('click', () => {
+      // prevent form submit defaults
+      // not required as button is not in form
+      // e.preventDefault();
+      // e.stopPropagation();
+      // calls formSubmit()
       grecaptcha.execute();
     });
     submit.disabled = false;
@@ -176,23 +186,16 @@ const contactForm = ({
       //submit form and print status and response
 
       if (dropzone) {
-        if (myDropzone.getQueuedFiles().length > 0) {
-          if (debug === true) {
-            console.log(
-              `${
-                myDropzone.getQueuedFiles().length
-              } images detected, dropzone to process queue`
-            );
-          }
-          myDropzone.processQueue();
-          return;
+        if (debug === true) {
+          console.log('dropzone called');
         }
+        myDropzone.processQueue();
+      } else {
+        if (debug === true) {
+          console.log('postData called no dropzone');
+        }
+        postData(form, formAction, xhrCallback);
       }
-      // else ...
-      if (debug === true) {
-        console.log('postData called no dropzone');
-      }
-      postData(form, formAction, xhrCallback);
     }
   };
 
@@ -205,7 +208,7 @@ const contactForm = ({
   const postData = (form, action, callback) => {
     // // form param must be an element
     const data = new FormData(form);
-    data.set('account', account);
+    // data.set('account', account);
     if (debug === true) {
       // Display the key/value pairs
       console.log('form entries:');
@@ -292,10 +295,6 @@ const contactForm = ({
     if ((!data.message, false)) {
       data.message = 'A server error has occured, please try again later';
     }
-    // temp fix for old v1 endpoint
-    // if (!data.success && data.status) {
-    //   data.success = data.status
-    // }
     // show alert. if not data.success, defaults to false
     // fall backs above will kick in also if needed
     showAlert(data.message, data.success);
@@ -305,9 +304,12 @@ const contactForm = ({
       gReset();
       submit.disabled = false;
     } else {
-      // reset form (user error generated from endpoint, or success
+      // reset form (user error generated from endpoint, or success)
       form.classList.remove('was-validated');
       form.reset();
+      //FIX
+      //reset dropzone also here!!
+      //
       // only reset alert/button when user focuses on name input
       // allows more time before recaptcha times out
       firstInput.addEventListener(
@@ -335,124 +337,106 @@ const contactForm = ({
     status.className = hiddenClass;
   };
 
-  /**
-   * only if dropzone = true
-   *
-   * fix this up!
-   */
+  if (dropzone === true) {
+    // global Dropzone */
+    const dropzoneOptions = {
+      // method and paramName defaults have been commented
+      url: formAction,
+      // method: 'POST',
+      // paramName: 'file', // The name that will be used to transfer the file
+      paramName: 'photo', // end point looks for file name
+      uploadMultiple: true,
+      autoProcessQueue: false,
+      maxFiles: dropzoneMaxFiles,
+      parallelUploads: dropzoneParallelUploads,
+      acceptedFiles: dropzoneAcceptedFiles,
+      resizeWidth: dropzoneResizeWidth,
+      maxThumbnailFilesize: 15,
+      addRemoveLinks: true,
+      autoQueue: true,
+      timeout: dropzoneTimeout,
+    };
+    // disable autodiscover so dropzone doesnt attach to the form
+    Dropzone.autoDiscover = false;
+    // initialize and attach
+    const dropzoneSelector = `#${formId}`;
+    let myDropzone = new Dropzone(dropzoneSelector, dropzoneOptions);
 
-  // function for serializing all inputs in a form
-  // const serializeArray = (form) => {
-  //   let arr = [];
-  //   Array.prototype.slice.call(form.elements).forEach(function (field) {
-  //     if (
-  //       !field.name ||
-  //       field.disabled ||
-  //       ['file', 'reset', 'submit', 'button'].indexOf(field.type) > -1
-  //     )
-  //       return;
-  //     if (field.type === 'select-multiple') {
-  //       Array.prototype.slice.call(field.options).forEach(function (option) {
-  //         if (!option.selected) return;
-  //         arr.push({
-  //           name: field.name,
-  //           value: option.value,
-  //         });
-  //       });
-  //       return;
-  //     }
-  //     if (['checkbox', 'radio'].indexOf(field.type) > -1 && !field.checked)
-  //       return;
-  //     arr.push({
-  //       name: field.name,
-  //       value: field.value,
-  //     });
-  //   });
-  //   return arr;
-  // };
+    // Listen to the sendingmultiple event. In this case, it's the sendingmultiple event instead
+    // of the sending event because uploadMultiple is set to true.
+    myDropzone.on('sendingmultiple', function (file, xhr, formData) {
+     
+      // Gets triggered when the form is actually being sent.
+      // Hide the success button or the complete form. 
+      // disable submit button
+      submit.disabled = true;
+       // hide spinner
+      spinner.classList.remove(hiddenClass);
 
-  // global Dropzone */
-  const dropzoneOptions = {
-    // method and paramName defaults have been commented
-    url: formAction,
-    // method: 'POST',
-    // paramName: 'file', // The name that will be used to transfer the file
-    paramName: "photo", // end point looks for file name
-    uploadMultiple: true,
-    autoProcessQueue: false,
-    maxFiles: dropzoneMaxFiles,
-    parallelUploads: dropzoneParallelUploads,
-    acceptedFiles: dropzoneAcceptedFiles,
-    resizeWidth: dropzoneResizeWidth,
-    maxThumbnailFilesize: 15,
-    addRemoveLinks: true,
-    autoQueue: true,
-    timeout: dropzoneTimeout,
-  };
-  // disable autodiscover so dropzone doesnt attach to the form
-  Dropzone.autoDiscover = false;
-  // initialize and attach
-  let myDropzone = new Dropzone(dropzoneFormSelector, dropzoneOptions);
 
-  // Listen to the sendingmultiple event. In this case, it's the sendingmultiple event instead
-  // of the sending event because uploadMultiple is set to true.
-  myDropzone.on('sendingmultiple', function (file, xhr, formData) {
-    // Gets triggered when the form is actually being sent
-    // initial event triggered by window.onSubmit
-    // const formFields = serializeArray(form);
-    // if (debug == true) {
-    //   console.log(`serialised form fields: ${formFields}`);
-    // }
-    const contactFormData = new FormData(form);
-    // add account field
-    formData.append('account', account);
-    // add all fields from top contact form
-    for (const entry of contactFormData.entries()) {
-      formData.append(entry[0], entry[1]);
-      ('account', account);
+      // const formFields = serializeArray(form);
+      // if (debug == true) {
+      //   console.log(`serialised form fields: ${formFields}`);
+      // }
+      // const contactFormData = new FormData(form);
+      // // add account field
+      // // formData.append('account', account);
+      // // add all fields from top contact form
+      // for (const entry of contactFormData.entries()) {
+      //   formData.append(entry[0], entry[1]);
+      //   'account', account;
+      //   if (debug == true) {
+      //     console.log(`appended field:${entry[0]}: ${entry[1]}`);
+      //   }
+      // }
+
+      // add each formField to formData (Which is currently just the image(s)
+      // formFields.forEach(function (field) {
+      //   formData.append(field.name, field.value);
+      //   if (debug == true) {
+      //     console.log(`appended field:: ${field.name}, ${field.value}`);
+      //     // loop over formData for console.log
+      //     console.log('dropzone FormData:');
+      //     for (const value of formData.values()) {
+      //       console.log(value);
+      //     }
+      //   }
+      // });
+    });
+
+    myDropzone.on('successmultiple', function (files, response) {
+      // Gets triggered when the files have successfully been sent.
+      // Redirect user or notify of success.
+      // xhrCallback({ success: true, message: response.message });
+      showAlert(response.message, true);
+    });
+    myDropzone.on('errormultiple', function (files, response) {
+      // Gets triggered when there was an error sending the files.
+      // Maybe show form again, and notify user of error
       if (debug == true) {
-        console.log(`appended field:${entry[0]}: ${entry[1]}`);
+        console.log(response);
       }
-    }
-
-    // add each formField to formData (Which is currently just the image(s)
-    // formFields.forEach(function (field) {
-    //   formData.append(field.name, field.value);
-    //   if (debug == true) {
-    //     console.log(`appended field:: ${field.name}, ${field.value}`);
-    //     // loop over formData for console.log
-    //     console.log('dropzone FormData:');
-    //     for (const value of formData.values()) {
-    //       console.log(value);
-    //     }
-    //   }
-    // });
-  });
-
-  myDropzone.on('successmultiple', function (files, response) {
-    // Gets triggered when the files have successfully been sent.
-    xhrCallback({ success: true, message: response.message });
-  });
-  myDropzone.on('errormultiple', function (files, response) {
-    // Gets triggered when there was an error sending the files.
-    if (debug == true) {
-      console.log(response);
-    }
-    if (typeof response.message === 'undefined' || response.message === null) {
-      // only show this generic error is there is no response,
-      // as dropzone also assigns error messages to response
-      // this overrides dropzone errors to avoid issues as response will be defined
-      xhrCallback({
-        success: false,
-        message: 'Sorry there is a connection error, please try again later.',
-      });
-    }
-    xhrCallback({ sucess: false, message: response.message });
-  });
-  myDropzone.on('maxfilesexceeded', function (file) {
-    this.removeFile(file);
-    alert(`Only ${dropzoneMaxFiles} files can be uploaded!`);
-  });
+      if (
+        typeof response.message === 'undefined' ||
+        response.message === null
+      ) {
+        // only show this generic error is there is no response,
+        // as dropzone also assigns error messages to response
+        // this overrides dropzone errors to avoid issues as response will be defined
+        // xhrCallback({
+        //   success: false,
+        //   message: 'Sorry there is a connection error, please try again later.',
+        // });
+        showAlert('Sorry there is a connection error, please try again later.', false);
+      }
+      // xhrCallback({ sucess: false, message: response.message });
+      showAlert(response.message, false);
+    });
+    myDropzone.on('maxfilesexceeded', function (file) {
+      this.removeFile(file);
+      alert(`Only ${dropzoneMaxFiles} files can be uploaded!`);
+    });
+  }
 };
 
 export default contactForm;

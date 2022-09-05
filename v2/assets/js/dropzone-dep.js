@@ -1,1 +1,0 @@
-import Dropzone from 'dropzone';
