@@ -13,20 +13,10 @@
  * @param {string} alertErrorClass - CSS class used to modify alert into a error alert
  * @param {string} hiddenClass - CSS class used to hide a div 
  * @param {string} dBlockClass - Display: block class 
-//  * @param {string} statusId - ID of status message div // internal use
-//  * @param {string} spinnerId - ID of spinner div // internal use
- * @param {bool} dropzone - true to enable dropzone
- * @param {string} dropzoneFormSelector - selector of dropzone form e.g. #js-dropzoneForm
- * @param {string} dropzoneSubmitId - ID of submit button (if using dropzone)
- * @param {String} dropzoneMaxFiles = 6,
- * @param {int} dropzoneParallelUploads = 6,
- * @param {string} dropzoneAcceptedFiles = 'image/*', glog
- * @param {int} dropzoneResizeWidth = 800, in px
- * @param {int}  dropzoneTimeout = 8000, in miliseconds
  * @param {bool} - debug - true to turn on debug messages
  */
 
-// import Dropzone from 'dropzone';
+
 
 const contactForm = ({
   formId = '',
